@@ -6,7 +6,7 @@ Stdlib-only HTTP service. Endpoints (base /v1):
   POST   /models                 register a model record (schema-validated; 201 / 422)
   GET    /models/{model_id}      latest approved record
   GET    /models/{model_id}/versions/{version}
-  POST   /models/{model_id}/deprecate   deprecate a version -> triggers re-certification callbacks
+  POST   /models/{model_id}/{version}/deprecate   deprecate a version -> triggers re-certification callbacks
   POST   /resolve                {"model_ref": "churn-scorer@2.3.1"} -> pinned record (id+version+cid)
                                    used by Spec-444 scaffold/deploy to resolve model_bindings
   POST   /webhooks               register a re-certification callback URL (called on deprecate/re-register)
@@ -123,10 +123,8 @@ class Handler(BaseHTTPRequestHandler):
             return self._send(200, {"model_id": rec["model_id"], "version": rec["version"], "cid": rec["cid"],
                                     "risk_class": rec["policy"]["risk_class"],
                                     "approved_environments": rec["policy"]["approved_environments"]})
-        if len(p) == 4 and p[:2] == ["v1", "models"] and p[3] == "deprecate":
-            vs = self.store.models.get(p[2], {})
-            rec = vs.get(p[3 - 1]) or (vs and vs.get(p[-1]))
-            rec = vs.get(p[3])
+        if len(p) == 5 and p[:2] == ["v1", "models"] and p[4] == "deprecate":
+            rec = self.store.models.get(p[2], {}).get(p[3])
             if not rec:
                 return self._send(404, {"error": "not found"})
             rec["status"] = "deprecated"

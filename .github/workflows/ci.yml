@@ -5,7 +5,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        with: {repository: Agentic-Operation/agent-bootstrap-management, path: bootstrap}
       - uses: actions/setup-python@v5
         with: {python-version: '3.12'}
       - run: pip install pytest jsonschema
-      - run: python -m pytest tests -q
+      - run: SPEC444_ANNEXES=$PWD/bootstrap/spec/annexes python -m pytest tests -q
